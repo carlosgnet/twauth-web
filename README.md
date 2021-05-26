@@ -1,5 +1,5 @@
 # twauth-web
-dadsadasfdadsfsfdasds
+
 A simple Python + Flask web app that demonstrates the flow of obtaining a [Twitter user OAuth access token](https://developer.twitter.com/en/docs/basics/authentication/overview/oauth).
 
 ## Setup
