@@ -5,6 +5,10 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import json
+import logging
+import sqlite3
+
+sqlitePath = "../../../db/oneclout.sqlite3"
 
 app = Flask(__name__)
 
@@ -105,6 +109,31 @@ def callback():
     real_oauth_token_secret = access_token[b'oauth_token_secret'].decode(
         'utf-8')
 
+
+
+
+
+    logging.basicConfig(format = "[%(asctime)s] [%(name)s] [%(levelname)s] [%(message)s]", filename = "../../../log/twauth-web.log", level = logging.DEBUG)
+    logging.info("Initiating twauth-web.py")
+
+    sqliteConnection = OpenSqliteConnection(sqlitePath)
+    if sqliteConnection is None:
+        logging.error("SQLite connection could not be created")
+        return
+
+    sqliteCursor = sqliteConnection.cursor();
+    if sqliteCursor is None:
+        logging.error("SQLite cursor could not be created")
+        return
+
+    SaveUserToken(sqliteConnection, sqliteCursor, screen_name, user_id, real_oauth_token, real_oauth_token_secret)
+
+    CloseSqliteConnection(sqliteConnection)
+
+
+
+
+
     # Call api.twitter.com/1.1/users/show.json?user_id={user_id}
     real_token = oauth.Token(real_oauth_token, real_oauth_token_secret)
     real_client = oauth.Client(consumer, real_token)
@@ -133,6 +162,52 @@ def callback():
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('error.html', error_message='uncaught exception'), 500
+
+
+def OpenSqliteConnection(sqliteFilePath):
+    try:
+        sqliteConnection = sqlite3.connect(sqliteFilePath)
+
+        if sqliteConnection is None:
+            logging.error("SQLite connection is None")
+            return None
+
+    except Exception as exc:
+        logging.error("SQLite connection at %s failed: " + str(exc), sqliteFilePath)
+        return None
+
+    else:
+        logging.info("SQLite connection open at %s", sqliteFilePath)
+        return sqliteConnection;
+
+
+def CloseSqliteConnection(sqliteConnection):
+    try:
+        sqliteConnection.close()
+
+    except Exception as exc:
+        logging.warning("SQLite connection could not be closed: " + str(exc))
+
+    else:
+        logging.info("SQLite connection correctly closed")
+
+
+def SaveUserToken(sqliteConnection, sqliteCursor, screen_name, user_id, real_oauth_token, real_oauth_token_secret):
+    try:
+        #update_date
+        sqliteCursor.execute("""UPDATE tw_export
+                                SET tw_screen_name = ?,
+                                    tw_user_id = ?,
+                                    real_oauth_token = ?,
+                                    real_oauth_token_secret = ?
+                                WHERE user_id = 2""", (screen_name, user_id, real_oauth_token, real_oauth_token_secret))
+        sqliteConnection.commit()
+
+    except Exception as exc:
+        logging.error("Updating into tw_export for user %i failed: " + str(exc), user_id)
+
+    else:
+        logging.info("Updating tw_export for user %i was correct", user_id)
 
   
 if __name__ == '__main__':
