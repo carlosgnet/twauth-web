@@ -20,15 +20,10 @@ authorize_url = 'https://api.twitter.com/oauth/authorize'
 show_user_url = 'https://api.twitter.com/1.1/users/show.json'
 
 # Support keys from environment vars (Heroku).
-app.config['APP_CONSUMER_KEY'] = os.getenv(
-    'TWAUTH_APP_CONSUMER_KEY', 'API_Key_from_Twitter')
-app.config['APP_CONSUMER_SECRET'] = os.getenv(
-    'TWAUTH_APP_CONSUMER_SECRET', 'API_Secret_from_Twitter')
+app.config['APP_CONSUMER_KEY'] = os.getenv('TWAUTH_APP_CONSUMER_KEY', 'API_Key_from_Twitter')
+app.config['APP_CONSUMER_SECRET'] = os.getenv(TWAUTH_APP_CONSUMER_SECRET', 'API_Secret_from_Twitter')
 
-# alternatively, add your key and secret to config.cfg
-# config.cfg should look like:
-# APP_CONSUMER_KEY = 'API_Key_from_Twitter'
-# APP_CONSUMER_SECRET = 'API_Secret_from_Twitter'
+# Get consumer API key and secret from config.cfg
 app.config.from_pyfile('config.cfg', silent=True)
 
 oauth_store = {}
@@ -49,12 +44,10 @@ def start():
     consumer = oauth.Consumer(
         app.config['APP_CONSUMER_KEY'], app.config['APP_CONSUMER_SECRET'])
     client = oauth.Client(consumer)
-    resp, content = client.request(request_token_url, "POST", body=urllib.parse.urlencode({
-                                   "oauth_callback": app_callback_url}))
+    resp, content = client.request(request_token_url, "POST", body=urllib.parse.urlencode({"oauth_callback": app_callback_url}))
 
     if resp['status'] != '200':
-        error_message = 'Invalid response, status {status}, {message}'.format(
-            status=resp['status'], message=content.decode('utf-8'))
+        error_message = 'Invalid response, status {status}, {message}'.format(status=resp['status'], message=content.decode('utf-8'))
         return render_template('error.html', error_message=error_message)
 
     request_token = dict(urllib.parse.parse_qsl(content))
@@ -92,8 +85,7 @@ def callback():
     # if we got this far, we have both callback params and we have
     # found this token locally
 
-    consumer = oauth.Consumer(
-        app.config['APP_CONSUMER_KEY'], app.config['APP_CONSUMER_SECRET'])
+    consumer = oauth.Consumer(app.config['APP_CONSUMER_KEY'], app.config['APP_CONSUMER_SECRET'])
     token = oauth.Token(oauth_token, oauth_token_secret)
     token.set_verifier(oauth_verifier)
     client = oauth.Client(consumer, token)
@@ -108,7 +100,6 @@ def callback():
     real_oauth_token = access_token[b'oauth_token'].decode('utf-8')
     real_oauth_token_secret = access_token[b'oauth_token_secret'].decode(
         'utf-8')
-
 
 
 
@@ -132,25 +123,6 @@ def callback():
 
 
 
-
-
-    # Call api.twitter.com/1.1/users/show.json?user_id={user_id}
-    real_token = oauth.Token(real_oauth_token, real_oauth_token_secret)
-    real_client = oauth.Client(consumer, real_token)
-    real_resp, real_content = real_client.request(
-        show_user_url + '?user_id=' + user_id, "GET")
-
-    if real_resp['status'] != '200':
-        error_message = "Invalid response from Twitter API GET users/show: {status}".format(
-            status=real_resp['status'])
-        return render_template('error.html', error_message=error_message)
-
-    response = json.loads(real_content.decode('utf-8'))
-
-    friends_count = response['friends_count']
-    statuses_count = response['statuses_count']
-    followers_count = response['followers_count']
-    name = response['name']
 
     # don't keep this token and secret in memory any longer
     del oauth_store[oauth_token]
