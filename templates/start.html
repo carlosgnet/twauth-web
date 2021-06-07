@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-{% block title %}start{% endblock %}
 {% block containercontent %}
-<h2>start (someplace inside your app)</h2>
 <p>Please click the button below, you'll be taken to Twitter to login (if you aren't already) and to grant access to <strong>OneClout (one_clout)</strong>. Afterward you'll be redirected back.</p>
 <p><a href="{{ authorize_url }}?oauth_token={{ oauth_token }}" class="btn btn-small btn-success">Authorize OneClout</a></p>
 <hr>

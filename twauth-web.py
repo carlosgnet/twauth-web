@@ -21,7 +21,7 @@ show_user_url = 'https://api.twitter.com/1.1/users/show.json'
 
 # Support keys from environment vars (Heroku).
 app.config['APP_CONSUMER_KEY'] = os.getenv('TWAUTH_APP_CONSUMER_KEY', 'API_Key_from_Twitter')
-app.config['APP_CONSUMER_SECRET'] = os.getenv(TWAUTH_APP_CONSUMER_SECRET', 'API_Secret_from_Twitter')
+app.config['APP_CONSUMER_SECRET'] = os.getenv('TWAUTH_APP_CONSUMER_SECRET', 'API_Secret_from_Twitter')
 
 # Get consumer API key and secret from config.cfg
 app.config.from_pyfile('config.cfg', silent=True)
@@ -127,8 +127,7 @@ def callback():
     # don't keep this token and secret in memory any longer
     del oauth_store[oauth_token]
 
-    return render_template('callback-success.html', screen_name=screen_name, user_id=user_id, name=name,
-                           friends_count=friends_count, statuses_count=statuses_count, followers_count=followers_count, access_token_url=access_token_url)
+    return render_template('callback-success.html', screen_name=screen_name, user_id=user_id, access_token_url=access_token_url)
 
 
 @app.errorhandler(500)
